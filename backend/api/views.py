@@ -23,7 +23,7 @@ def course_recommendations(request):
     user = request.user
     results = Result.objects.filter(user=user)
     
-    # Step 1: Collect result data
+   
     data = []
     for r in results:
         grade_val = GRADE_MAP.get(r.grade, 0.0)
@@ -31,14 +31,14 @@ def course_recommendations(request):
     
     df = pd.DataFrame(data)
 
-    # Step 2: Weak subjects (grade below 2.5)
+    
     weak_courses = df[df['grade'] < 2.5]['course'].tolist()
     strong_courses = df[df['grade'] >= 3.0]['course'].tolist()
 
-    # Step 3: Match with skill courses
+    
     skill_courses = list(CSESkillDevelopmentCourse.objects.values_list('course_name', flat=True))
     
-    # Suggest skill courses based on weaknesses
+    
     suggestions = []
     for course in weak_courses:
         if 'Programming' in course:
@@ -48,7 +48,7 @@ def course_recommendations(request):
         elif 'Physics' in course:
             suggestions += [c for c in skill_courses if 'Simulation' in c or 'Robotics' in c]
 
-    # Remove duplicates and fallback if none
+    
     suggestions = list(set(suggestions))
     if not suggestions:
         suggestions = list(skill_courses[:5])
@@ -63,7 +63,7 @@ def course_recommendations(request):
     })
 
 
-#  User Info View (for Dashboard)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user_info(request):
@@ -74,13 +74,13 @@ def get_user_info(request):
         'email': user.email
     })
 
-#  Registration View
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
-#  Login View using student_id
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -103,7 +103,7 @@ class LoginView(APIView):
             })
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Create new Course (for logged-in user)
+
 class CourseCreateView(generics.CreateAPIView):
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
@@ -111,7 +111,7 @@ class CourseCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-#  Create new Reminder (for logged-in user)
+
 class ReminderCreateView(generics.CreateAPIView):
     queryset = Reminder.objects.all()
     serializer_class = ReminderSerializer
@@ -120,7 +120,7 @@ class ReminderCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-#  List only user's Courses
+
 class CourseListView(generics.ListAPIView):
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
@@ -128,7 +128,7 @@ class CourseListView(generics.ListAPIView):
     def get_queryset(self):
         return Course.objects.filter(user=self.request.user)
 
-#  List only user's Reminders
+
 class ReminderListView(generics.ListAPIView):
     serializer_class = ReminderSerializer
     permission_classes = [IsAuthenticated]
@@ -219,10 +219,10 @@ class ResultAnalysisView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Get results for the logged-in user
+        
         results = Result.objects.filter(user=request.user)
         
-        # Serialize the results
+        
         result_data = ResultSerializer(results, many=True).data
         
         return Response(result_data)
